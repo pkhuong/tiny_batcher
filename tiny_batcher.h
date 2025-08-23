@@ -27,9 +27,9 @@ struct tiny_batcher
 	    uint8_t ilen;   // t - 1
 	    uint8_t outer;  // p
 	    uint8_t inner;  // q
-	};
+	} v;  // values
 	size_t padding;
-    };
+    } c; // counters
 
     size_t next_idx;
 };

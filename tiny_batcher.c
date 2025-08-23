@@ -14,16 +14,16 @@ tiny_batcher_generate(struct tiny_batcher *state)
 	    goto done;
 
 	state->len = -len;
-	state->ilen = CHAR_BIT * sizeof(size_t) - 1 - __builtin_clzll(len - 1);
-	state->outer = state->inner = state->ilen;
+	state->c.v.ilen = CHAR_BIT * sizeof(size_t) - 1 - __builtin_clzll(len - 1);
+	state->c.v.outer = state->c.v.inner = state->c.v.ilen;
 	state->next_idx = 0;
     }
 
     while (true)
     {
-	size_t p = 1UL << state->outer;
-	size_t q = 1UL << state->inner;
-	bool is_first_inner = state->inner == state->ilen;
+	size_t p = 1UL << state->c.v.outer;
+	size_t q = 1UL << state->c.v.inner;
+	bool is_first_inner = state->c.v.inner == state->c.v.ilen;
 	bool is_subsequent_inner = !is_first_inner;
 
 	size_t d = is_first_inner ? p : 2 * q - p;
@@ -56,8 +56,8 @@ tiny_batcher_generate(struct tiny_batcher *state)
 
 	state->next_idx = 0;
 	bool is_last_inner = p == q;
-	state->inner = is_last_inner ? state->ilen : state->inner - 1;
-	state->outer -= is_last_inner;
+	state->c.v.inner = is_last_inner ? state->c.v.ilen : state->c.v.inner - 1;
+	state->c.v.outer -= is_last_inner;
     }
 
 done:
