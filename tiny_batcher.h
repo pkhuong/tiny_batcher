@@ -22,13 +22,13 @@ struct tiny_batcher
     // in log_2 space
     union
     {
-	struct
-	{
-	    uint8_t ilen;   // t - 1
-	    uint8_t outer;  // p
-	    uint8_t inner;  // q
-	} v;  // values
-	size_t padding;
+        struct
+        {
+            uint8_t ilen;   // t - 1
+            uint8_t outer;  // p
+            uint8_t inner;  // q
+        } v;  // values
+        size_t padding;
     } c; // counters
 
     size_t next_idx;
@@ -82,13 +82,13 @@ tiny_batcher_next(struct tiny_batcher *state, size_t *left, size_t *right)
 }  // extern "C"
 #endif
 
-#define TINY_BATCHER_SORT_LOOP(N, LEFT, RIGHT)			\
+#define TINY_BATCHER_SORT_LOOP(N, LEFT, RIGHT)                  \
     TINY_BATCHER_SORT_LOOP_(__COUNTER__, N, LEFT, RIGHT)
 
-#define TINY_BATCHER_SORT_LOOP_(U, N, LEFT, RIGHT)	\
+#define TINY_BATCHER_SORT_LOOP_(U, N, LEFT, RIGHT)      \
     TINY_BATCHER_SORT_LOOP__(U, N, LEFT, RIGHT)
-    
-#define TINY_BATCHER_SORT_LOOP__(U, N, LEFT, RIGHT)			\
+
+#define TINY_BATCHER_SORT_LOOP__(U, N, LEFT, RIGHT)                     \
     for (struct tiny_batcher tiny_batcher_loop_state_##U = tiny_batcher_make((N)); \
-	 tiny_batcher_next(&tiny_batcher_loop_state_##U, &(LEFT), &(RIGHT)); \
-	)
+         tiny_batcher_next(&tiny_batcher_loop_state_##U, &(LEFT), &(RIGHT)); \
+        )
