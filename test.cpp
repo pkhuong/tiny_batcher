@@ -1,13 +1,14 @@
 #include "tiny_batcher.hpp"
 
 #include <algorithm>
+#include <climits>
 #include <vector>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 __attribute__((noinline)) void
-int_sort(int *xs, unsigned long n)
+int_sort(int *xs, size_t n)
 {
     tiny_batcher_sort(xs, n);
 }
@@ -50,8 +51,36 @@ static void zero_one_test(size_t n)
     fprintf(stderr, "Completed zero-one test for %zu\n", n);
 }
 
+static void bound_check(size_t n, size_t iter)
+{
+    size_t i = 0;
+
+    size_t left, right;
+    TINY_BATCHER_SORT_LOOP(n, left, right)
+    {
+	if (left >= right)
+	    __builtin_trap();
+
+	if (right >= n)
+	    __builtin_trap();
+
+	if (left >= n)
+	    __builtin_trap();
+
+	if (i++ > iter)
+	    break;
+    }
+}
+
 int main(int argc, char **argv)
 {
+    bound_check(SIZE_MAX / 2, 1000);
+    bound_check(SIZE_MAX / 2 - 1, 1000);
+    bound_check(SIZE_MAX / 4 + 2, 1000);
+    bound_check(SIZE_MAX / 4 + 1, 1000);
+    bound_check(SIZE_MAX / 4, 1000);
+    bound_check(SIZE_MAX / 4, - 1 1000);
+
     // Only one argument, dump the list of compare-exchanges for
     // argv[1] items.
     if (argc == 2)
@@ -61,7 +90,7 @@ int main(int argc, char **argv)
 	if (n <= 21)
 	    zero_one_test(n);
 
-	unsigned long i, j;
+	size_t i, j;
 	TINY_BATCHER_SORT_LOOP(n, i, j)
 	    printf("%ld %ld\n", i, j);
 
