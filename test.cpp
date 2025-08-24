@@ -79,13 +79,13 @@ int main(int argc, char **argv)
     bound_check(SIZE_MAX / 4 + 2, 1000);
     bound_check(SIZE_MAX / 4 + 1, 1000);
     bound_check(SIZE_MAX / 4, 1000);
-    bound_check(SIZE_MAX / 4, - 1 1000);
+    bound_check(SIZE_MAX / 4 - 1, 1000);
 
     // Only one argument, dump the list of compare-exchanges for
     // argv[1] items.
     if (argc == 2)
     {
-        unsigned n = atoi(argv[1]);
+        size_t n = atoll(argv[1]);
 
         if (n <= 21)
             zero_one_test(n);
