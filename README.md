@@ -22,15 +22,13 @@ See `tiny_batcher.hpp` for sample usage, or simply
 ```
 void sort_ints(int *xs, size_t n)
 {
-    size_t left, right;
-    TINY_BATCHER_SORT_LOOP(n, left, right)
+    size_t i, j;
+    TINY_BATCHER_SORT_LOOP(n, i, j)
     {
-        if (xs[left] > xs[right])
-        {
-            int tmp = xs[left];
-            xs[left] = xs[right];
-            xs[left] = tmp;
-        }
+        int left = xs[i], right = xs[j];
+
+        xs[i] = left < right ? left : right;
+        xs[j] = left >= right ? left : right;
     }
 }
 ```
@@ -61,45 +59,40 @@ When targeting x86-64, gcc 12.3.0 at `-Os` compiles `tiny_batcher_generate` to 2
 for aarch64, clang-20 at `-Os` compiles the same code to 240 bytes.
 
 The rest of the library consists of trivial inline functions.  On
-x86-64 / gcc-12.3.0, the `int_sort` function in `test.cpp` compiles to
-78 bytes:
+x86-64 / gcc-12.3.0, the `sort_ints` function above compiles to 67
+bytes:
 
 ```
-        endbr64
         pushq   %rbp
         pushq   %rbx
         movq    %rdi, %rbx
         subq    $40, %rsp
-        movq    %rsi, (%rsp)
-        movq    %rsp, %rbp
-        jmp     .L2
-        .p2align 4,,10
-        .p2align 3
-.L4:
-        leaq    (%rbx,%rax,4), %rsi
-        leaq    (%rbx,%rdx,4), %rcx
-        movl    (%rcx), %eax
-        movl    (%rsi), %edx
-        cmpl    %edx, %eax
-        jge     .L3
-        movl    %edx, %edi
-        movl    %eax, %edx
-        movl    %edi, %eax
-.L3:
-        movl    %edx, (%rsi)
-        movl    %eax, (%rcx)
+        movq    %rsi, 8(%rsp)
+        leaq    8(%rsp), %rbp
 .L2:
         movq    %rbp, %rdi
         call    tiny_batcher_generate@PLT
         testq   %rdx, %rdx
-        jne     .L4
+        je      .L6
+        leaq    (%rbx,%rax,4), %rsi
+        leaq    (%rbx,%rdx,4), %rcx
+        movl    (%rsi), %eax
+        movl    (%rcx), %edx
+        cmpl    %edx, %eax
+        movl    %edx, %edi
+        cmovle  %eax, %edi
+        cmovl   %edx, %eax
+        movl    %edi, (%rsi)
+        movl    %eax, (%rcx)
+        jmp     .L2
+.L6:
         addq    $40, %rsp
         popq    %rbx
         popq    %rbp
         ret
 ```
 
-For aarch64 / clang-20 (iat `-O2)`, `int_sort` turns into 84 bytes:
+For aarch64 / clang-20 (at `-O2)`, `sort_ints` turns into 84 bytes:
 
 ```
         sub     sp, sp, #64
@@ -113,8 +106,8 @@ For aarch64 / clang-20 (iat `-O2)`, `int_sort` turns into 84 bytes:
         bl      tiny_batcher_generate
         cbz     x1, .LBB0_3
 // %bb.2:                               //   in Loop: Header=BB0_1 Depth=1
-        ldr     w8, [x19, x1, lsl #2]
-        ldr     w9, [x19, x0, lsl #2]
+        ldr     w8, [x19, x0, lsl #2]
+        ldr     w9, [x19, x1, lsl #2]
         cmp     w8, w9
         csel    w10, w8, w9, lt
         str     w10, [x19, x0, lsl #2]
@@ -122,7 +115,6 @@ For aarch64 / clang-20 (iat `-O2)`, `int_sort` turns into 84 bytes:
         str     w8, [x19, x1, lsl #2]
         b       .LBB0_1
 .LBB0_3:
-        .cfi_def_cfa wsp, 64
         ldp     x29, x30, [sp, #32]             // 16-byte Folded Reload
         ldr     x19, [sp, #48]                  // 8-byte Folded Reload
         add     sp, sp, #64
