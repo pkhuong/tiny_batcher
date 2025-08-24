@@ -2,10 +2,9 @@
 
 #include <algorithm>
 #include <climits>
-#include <vector>
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 __attribute__((noinline)) void
 int_sort(int *xs, size_t n)
@@ -13,7 +12,8 @@ int_sort(int *xs, size_t n)
     tiny_batcher_sort(xs, n);
 }
 
-static void zero_one_test(size_t n)
+static void
+zero_one_test(size_t n)
 {
     std::vector<int> xs;
 
@@ -51,7 +51,8 @@ static void zero_one_test(size_t n)
     fprintf(stderr, "Completed zero-one test for %zu\n", n);
 }
 
-static void bound_check(size_t n, size_t iter)
+static void
+bound_check(size_t n, size_t iter)
 {
     size_t i = 0;
 
@@ -72,7 +73,8 @@ static void bound_check(size_t n, size_t iter)
     }
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     bound_check(SIZE_MAX / 2, 1000);
     bound_check(SIZE_MAX / 2 - 1, 1000);

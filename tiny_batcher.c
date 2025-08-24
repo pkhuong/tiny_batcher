@@ -60,10 +60,8 @@ tiny_batcher_generate(struct tiny_batcher *state)
         state->c.v.outer -= is_last_inner;
     }
 
-done:
-    {
-        struct tiny_batcher_step ret;
-        ret.left = ret.right = 0;
-        return ret;
-    }
+done:;
+    struct tiny_batcher_step ret;
+    ret.left = ret.right = 0;
+    return ret;
 }
