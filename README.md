@@ -92,7 +92,7 @@ bytes:
         ret
 ```
 
-For aarch64 / clang-20 (at `-O2)`, `sort_ints` turns into 84 bytes:
+For aarch64 / clang-20 (at `-Os)`, `sort_ints` turns into 84 bytes:
 
 ```
         sub     sp, sp, #64
