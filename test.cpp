@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <climits>
+#include <functional>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <vector>
 
 __attribute__((noinline)) void
@@ -73,9 +75,38 @@ bound_check(size_t n, size_t iter)
     }
 }
 
+static void
+reverse_comparator_test()
+{
+    std::vector<int> xs = {3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5};
+
+    tiny_batcher_sort(xs.begin(), xs.size(), std::greater<int>());
+
+    if (!std::is_sorted(xs.begin(), xs.end(), std::greater<int>()))
+        __builtin_trap();
+
+    fprintf(stderr, "Completed reverse comparator test\n");
+}
+
+static void
+string_sort_test()
+{
+    std::vector<std::string> xs = {"banana", "apple", "cherry", "date", "elderberry", "fig", "apricot"};
+
+    tiny_batcher_sort(xs);
+
+    if (!std::is_sorted(xs.begin(), xs.end()))
+        __builtin_trap();
+
+    fprintf(stderr, "Completed string sort test\n");
+}
+
 int
 main(int argc, char **argv)
 {
+    reverse_comparator_test();
+    string_sort_test();
+
     bound_check(SIZE_MAX / 2, 1000);
     bound_check(SIZE_MAX / 2 - 1, 1000);
     bound_check(SIZE_MAX / 4 + 2, 1000);
