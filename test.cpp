@@ -127,6 +127,24 @@ main(int argc, char **argv)
         TINY_BATCHER_SORT_LOOP(n, i, j)
             printf("%zu %zu\n", i, j);
 
+        // Repeat with direct tiny_batcher_make/tiny_batcher_generate calls.
+        struct tiny_batcher batcher = tiny_batcher_make(n);
+        for (;;)
+        {
+            struct tiny_batcher_step step = tiny_batcher_generate(&batcher);
+            if (step.left == 0 && step.right == 0)
+                break;
+            if (step.left >= (size_t)n || step.left >= step.right || step.right >= (size_t)n)
+                __builtin_trap();
+        }
+
+        for (int k = 0; k < 10; k++)
+        {
+            struct tiny_batcher_step step = tiny_batcher_generate(&batcher);
+            if (step.left != 0 || step.right != 0)
+                __builtin_trap();
+        }
+
         return 0;
     }
 
