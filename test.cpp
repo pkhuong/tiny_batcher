@@ -125,7 +125,7 @@ main(int argc, char **argv)
 
         size_t i, j;
         TINY_BATCHER_SORT_LOOP(n, i, j)
-            printf("%ld %ld\n", i, j);
+            printf("%zu %zu\n", i, j);
 
         return 0;
     }
