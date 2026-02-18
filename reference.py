@@ -1,4 +1,3 @@
-import math
 import sys
 
 # A generator of indices for Batcher's odd/even merge sort,
@@ -8,7 +7,7 @@ def algorithM(N):
         return
 
     # M1
-    t = math.ceil(math.log2(N))
+    t = (N - 1).bit_length()
     p = 2**(t - 1)
 
     while True:  # M2
