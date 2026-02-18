@@ -101,11 +101,59 @@ string_sort_test()
     fprintf(stderr, "Completed string sort test\n");
 }
 
+static void
+nested_sort_test()
+{
+    std::vector<std::vector<int>> vecs = {
+        {9, 3, 7, 1},
+        {2, 8, 4, 6},
+        {5, 1, 3, 9},
+        {4, 6, 2, 8},
+        {7, 1, 5, 3},
+    };
+
+    size_t outer_n = vecs.size();
+    size_t inner_n = vecs[0].size();
+
+    size_t outer_left, outer_right;
+    TINY_BATCHER_SORT_LOOP(outer_n, outer_left, outer_right)
+    {
+        auto &a = vecs[outer_left];
+        auto &b = vecs[outer_right];
+
+        if (!std::is_sorted(a.begin(), a.end()) || !std::is_sorted(b.begin(), b.end()))
+        {
+            size_t inner_left, inner_right;
+            TINY_BATCHER_SORT_LOOP(inner_n, inner_left, inner_right)
+            {
+                if (a[inner_left] > a[inner_right])
+                    std::swap(a[inner_left], a[inner_right]);
+                if (b[inner_left] > b[inner_right])
+                    std::swap(b[inner_left], b[inner_right]);
+            }
+
+            if (!std::is_sorted(a.begin(), a.end()))
+                __builtin_trap();
+            if (!std::is_sorted(b.begin(), b.end()))
+                __builtin_trap();
+        }
+
+        if (a > b)
+            std::swap(a, b);
+    }
+
+    if (!std::is_sorted(vecs.begin(), vecs.end()))
+        __builtin_trap();
+
+    fprintf(stderr, "Completed nested sort test\n");
+}
+
 int
 main(int argc, char **argv)
 {
     reverse_comparator_test();
     string_sort_test();
+    nested_sort_test();
 
     bound_check(SIZE_MAX / 2, 1000);
     bound_check(SIZE_MAX / 2 - 1, 1000);
