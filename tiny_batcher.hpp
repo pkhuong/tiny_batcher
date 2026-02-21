@@ -34,8 +34,8 @@ tiny_batcher_sort(It base, size_t n)
 
         auto comp = std::minmax(x, y);
 
-        auto xp = std::move(comp.first);
-        auto yp = std::move(comp.second);
+        auto xp = std::move(const_cast<decltype(x)>(comp.first));
+        auto yp = std::move(const_cast<decltype(y)>(comp.second));
 
         x = std::move(xp);
         y = std::move(yp);
