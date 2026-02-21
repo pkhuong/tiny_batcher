@@ -83,6 +83,14 @@ tiny_batcher_next(struct tiny_batcher *state, size_t *left, size_t *right)
 }  // extern "C"
 #endif
 
+// Sample usage:
+//
+// size_t i, j;
+// TINY_BATCHER_SORT_LOOP(n, i, j)
+// {
+//     if (arr[i] > arr[j])
+//         SWAP(arr[i], arr[j]);
+// }
 #define TINY_BATCHER_SORT_LOOP(N, LEFT, RIGHT)     TINY_BATCHER_SORT_LOOP_(__COUNTER__, N, LEFT, RIGHT)
 
 #define TINY_BATCHER_SORT_LOOP_(U, N, LEFT, RIGHT) TINY_BATCHER_SORT_LOOP__(U, N, LEFT, RIGHT)
