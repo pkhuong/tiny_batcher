@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -51,6 +52,30 @@ zero_one_test(size_t n)
     }
 
     fprintf(stderr, "Completed zero-one test for %zu\n", n);
+}
+
+static void
+random_sort_test(size_t n)
+{
+    std::vector<int> xs;
+
+    xs.reserve(n);
+
+    {
+        std::minstd_rand prng;
+
+        prng.seed(12345);
+        for (size_t i = 0; i < n; i++)
+            xs.push_back(int(prng()));
+    }
+
+    std::vector<int> expected = xs;
+    std::sort(expected.begin(), expected.end());
+
+    tiny_batcher_sort(xs);
+
+    if (xs != expected)
+        __builtin_trap();
 }
 
 static void
@@ -192,6 +217,9 @@ main(int argc, char **argv)
 
         if (n <= 21)
             zero_one_test(n);
+
+        if (n < 1000000)
+            random_sort_test(n);
 
         // Manually expand TINY_BATCHER_SORT_LOOP to keep our hands
         // on the batcher struct.
