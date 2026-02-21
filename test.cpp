@@ -171,8 +171,6 @@ nested_sort_test()
             {
                 if (a[inner_left] > a[inner_right])
                     std::swap(a[inner_left], a[inner_right]);
-                if (b[inner_left] > b[inner_right])
-                    std::swap(b[inner_left], b[inner_right]);
             }
 
             TINY_BATCHER_SORT_LOOP(b.size(), inner_left, inner_right)
