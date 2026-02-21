@@ -14,10 +14,13 @@ done
 # enough to fully sort up to 2**20
 LIMIT=$((10 * 10 * 1024 * 1024))
 
-for idx in `seq 62`; do
-    diff -q <(./test $((1 << $idx)) | head -n $LIMIT) \
-            <(python3 reference.py $((1 << $idx)) 2>/dev/null | head -n $LIMIT) >/dev/null || \
-        { echo "Failed $((1 << $idx))"; RC=1; };
+for idx in `seq 3 62`; do
+    for delta in -1 0 1; do
+        n=$(((1 << $idx) + $delta))
+        diff -q <(./test ${n} | head -n $LIMIT) \
+             <(python3 reference.py ${n} 2>/dev/null | head -n $LIMIT) >/dev/null || \
+            { echo "Failed ${n}"; RC=1; };
+    done
 done
 
 exit $RC
