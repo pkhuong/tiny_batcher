@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <climits>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <functional>
+#include <string>
 #include <vector>
 
 __attribute__((noinline)) void
@@ -73,6 +75,101 @@ bound_check(size_t n, size_t iter)
     }
 }
 
+static void
+reverse_comparator_test()
+{
+    std::vector<int> xs = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 };
+
+    tiny_batcher_sort(xs, std::greater<int>());
+
+    if (!std::is_sorted(xs.begin(), xs.end(), std::greater<int>()))
+        __builtin_trap();
+}
+
+struct MoveOnlyString
+{
+    std::string value;
+
+    MoveOnlyString(const char *s)
+        : value(s)
+    {
+    }
+
+    MoveOnlyString(MoveOnlyString &&) noexcept = default;
+    MoveOnlyString &operator=(MoveOnlyString &&) noexcept = default;
+    MoveOnlyString(const MoveOnlyString &) = delete;
+    MoveOnlyString &operator=(const MoveOnlyString &) = delete;
+
+    bool operator<(const MoveOnlyString &other) const { return value < other.value; }
+};
+
+static void
+string_sort_test()
+{
+    std::vector<MoveOnlyString> xs;
+    // shuf /usr/share/dict/words | head
+    xs.emplace_back("popliteus");
+    xs.emplace_back("jackpile");
+    xs.emplace_back("Cordylanthus");
+    xs.emplace_back("Bonne");
+    xs.emplace_back("sloot");
+    xs.emplace_back("mesoscapula");
+    xs.emplace_back("associatedness");
+
+    tiny_batcher_sort(xs);
+
+    if (!std::is_sorted(xs.begin(), xs.end()))
+        __builtin_trap();
+}
+
+static void
+nested_sort_test()
+{
+    std::vector<std::vector<int>> vecs = {
+        { 9, 3, 7, 1 },
+        { 2, 8, 4, 6 },
+        { 5, 1, 3, 9 },
+        { 4, 6, 2, 8 },
+        { 7, 1, 5, 3 },
+    };
+
+    size_t outer_left, outer_right;
+    TINY_BATCHER_SORT_LOOP(vecs.size(), outer_left, outer_right)
+    {
+        auto &a = vecs[outer_left];
+        auto &b = vecs[outer_right];
+
+        if (!std::is_sorted(a.begin(), a.end()) || !std::is_sorted(b.begin(), b.end()))
+        {
+            size_t inner_left, inner_right;
+            TINY_BATCHER_SORT_LOOP(a.size(), inner_left, inner_right)
+            {
+                if (a[inner_left] > a[inner_right])
+                    std::swap(a[inner_left], a[inner_right]);
+                if (b[inner_left] > b[inner_right])
+                    std::swap(b[inner_left], b[inner_right]);
+            }
+
+            TINY_BATCHER_SORT_LOOP(b.size(), inner_left, inner_right)
+            {
+                if (b[inner_left] > b[inner_right])
+                    std::swap(b[inner_left], b[inner_right]);
+            }
+
+            if (!std::is_sorted(a.begin(), a.end()))
+                __builtin_trap();
+            if (!std::is_sorted(b.begin(), b.end()))
+                __builtin_trap();
+        }
+
+        if (a > b)
+            std::swap(a, b);
+    }
+
+    if (!std::is_sorted(vecs.begin(), vecs.end()))
+        __builtin_trap();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -82,6 +179,10 @@ main(int argc, char **argv)
     bound_check(SIZE_MAX / 4 + 1, 1000);
     bound_check(SIZE_MAX / 4, 1000);
     bound_check(SIZE_MAX / 4 - 1, 1000);
+
+    reverse_comparator_test();
+    string_sort_test();
+    nested_sort_test();
 
     // Only one argument, dump the list of compare-exchanges for
     // argv[1] items.
