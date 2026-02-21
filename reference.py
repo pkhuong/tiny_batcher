@@ -1,5 +1,17 @@
 import sys
 
+# https://oeis.org/A375649: Number of comparisons and swaps in the
+# Batcher odd-even merge sort needed to sort n items, plus an extra
+# 0 for n = 0.
+EXPECTED_SWAPS = [
+    0, 0, 1, 3, 5, 9, 12, 16, 19, 28, 32, 38, 42, 48, 53, 59, 63, 85,
+    90, 98, 103, 112, 119, 127, 132, 140, 147, 156, 162, 171, 178,
+    186, 191, 246, 252, 262, 268, 280, 289, 299, 305, 317, 327, 339,
+    347, 359, 368, 378, 384, 394, 403, 415, 423, 436, 446, 457, 464,
+    476, 486, 498, 506
+]
+
+
 # A generator of indices for Batcher's odd/even merge sort,
 # transliterated from TAoCP Vol 3, 2nd edition.
 def algorithM(N):
@@ -34,5 +46,11 @@ def algorithM(N):
 
 
 if __name__ == "__main__":
-    for i, j in algorithM(int(sys.argv[1])):
+    n = int(sys.argv[1])
+    swaps = 0
+    for i, j in algorithM(n):
+        swaps += 1
         print(f"{i} {j}")
+
+    assert n >= len(EXPECTED_SWAPS) or swaps <= EXPECTED_SWAPS[n], \
+        f"unexpected number of swaps {swaps} > {EXPECTED_SWAPS[n]} in algorithm M"
