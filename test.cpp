@@ -193,9 +193,39 @@ main(int argc, char **argv)
         if (n <= 21)
             zero_one_test(n);
 
-        size_t i, j;
-        TINY_BATCHER_SORT_LOOP(n, i, j)
-            printf("%ld %ld\n", i, j);
+        // Manually expand TINY_BATCHER_SORT_LOOP to keep our hands
+        // on the batcher struct.
+        struct tiny_batcher batcher = tiny_batcher_make(n);
+        for (;;)
+        {
+            size_t i, j;
+
+            if (!tiny_batcher_next(&batcher, &i, &j))
+            {
+                // stop when both are 0.
+                if (i != 0 || j != 0)
+                    __builtin_trap();
+
+                break;
+            }
+
+            // should only have right == 0 when left and right are 0.
+            if (j == 0)
+                __builtin_abort();
+
+            if (i >= n || j >= n || i >= j) // bound check
+                __builtin_abort();
+
+            printf("%zu %zu\n", i, j);
+        }
+
+        // Now we should be stuck at 0/0.
+        for (size_t k = 0; k < 10; k++)
+        {
+            struct tiny_batcher_step step = tiny_batcher_generate(&batcher);
+            if (step.left != 0 || step.right != 0)
+                __builtin_trap();
+        }
 
         return 0;
     }
