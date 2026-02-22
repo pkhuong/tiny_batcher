@@ -32,7 +32,7 @@ struct tiny_batcher
             uint8_t outer;  // p
             uint8_t inner;  // q
         } v;  // values
-        size_t padding;
+        size_t padding;  // size_t to avoid internal uninit padding bytes for alignment
     } c; // counters
 
     size_t next_idx;
