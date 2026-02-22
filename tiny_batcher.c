@@ -13,8 +13,13 @@ tiny_batcher_generate(struct tiny_batcher *state)
         if (__builtin_expect(len <= 1, 0))
             goto done;
 
+        char clzll_must_not_truncate_size_t[2 * (sizeof(long long) >= sizeof(size_t)) - 1];
+        (void)clzll_must_not_truncate_size_t;
+
         state->len = -len;
-        state->c.v.ilen = CHAR_BIT * sizeof(size_t) - 1 - __builtin_clzll(len - 1);
+
+        // clzll(len - 1) is safe because len > 1.
+        state->c.v.ilen = CHAR_BIT * sizeof(long long) - 1 - __builtin_clzll(len - 1);
         state->c.v.outer = state->c.v.inner = state->c.v.ilen;
         state->next_idx = 0;
     }
