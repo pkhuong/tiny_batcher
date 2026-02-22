@@ -55,8 +55,8 @@ Code footprint
 
 There's only one function in `tiny_batcher`, `tiny_batcher_generate`.
 
-When targeting x86-64, gcc 12.3.0 at `-Os` compiles `tiny_batcher_generate` to 223 bytes;
-for aarch64, clang-20 at `-Os` compiles the same code to 240 bytes.
+When targeting x86-64, gcc 12.3.0 at `-Os` compiles `tiny_batcher_generate` to 199 bytes;
+for aarch64, clang-20 at `-Os` compiles the same code to 224 bytes.
 
 The rest of the library consists of trivial inline functions.  On
 x86-64 / gcc-12.3.0, the `sort_ints` function above compiles to 67
