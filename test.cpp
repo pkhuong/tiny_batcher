@@ -251,7 +251,11 @@ main(int argc, char **argv)
         {
             struct tiny_batcher_step step = tiny_batcher_generate(&batcher);
             if (step.left != 0 || step.right != 0)
+            {
+                printf("bad EOF value after k=%zu (%zu %zu)\n", k, step.left, step.right);
+                fflush(NULL);
                 __builtin_trap();
+            }
         }
 
         return 0;
