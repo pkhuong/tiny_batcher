@@ -38,8 +38,9 @@ struct tiny_batcher
     size_t next_idx;
 };
 
-// One compare exchange step.  We can assume `0 <= left <= right < len`,
-// and `left == right == 0` when the sort is done.
+// One compare exchange step.  We can assume `0 <= left < right < len`,
+// when there is something to do, and `left == right == 0` when the sort
+// is done.
 struct tiny_batcher_step
 {
     size_t left;
