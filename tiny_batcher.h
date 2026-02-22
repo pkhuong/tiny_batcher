@@ -7,23 +7,23 @@
 #include <assert.h>
 #endif
 
-// A compact generator for exchange pairs that implement Batcher's
-// odd/even merge sort.  This implementation is far from optimized
-// for speed.  We only use a sorting network because the data-obliviousness
-// makes for a nice easily testable interface.
+// A compact generator for exchange pairs that implement a variant of
+// Batcher's merge-exchange sort.  This implementation is far from
+// optimized for speed.  We only use a sorting network because the
+// data-obliviousness makes for a nice easily testable interface.
 //
 // The sort is *not* stable.
 struct tiny_batcher
 {
     // Positive len when uninitialized (except for the length).
-    // negative len once the state is initialized.
+    // negative len (> SIZE_MAX / 2) once the state is initialized.
     //
     // 0 is unambiguous / uninteresting because always sorted.
     size_t len;
 
     // Remainder can be left uninitialised for `tiny_batcher_generate`.
 
-    // State from TAoCP Vol 3's Algorithm M
+    // State from TAoCP Vol 3's Algorithm M (2nd ed, Section 5.2.2, p 111)
 
     // in log_2 space
     union
