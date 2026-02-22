@@ -2,8 +2,11 @@
 
 set -e
 
-cc -W -Wall -Os -c tiny_batcher.c
-c++ -W -Wall -Os test.cpp tiny_batcher.o -o test
+CC="${CC:-cc}"
+CXX="${CXX:-c++}"
+
+$CC -W -Wall -Os -c tiny_batcher.c
+$CXX -W -Wall -Os test.cpp tiny_batcher.o -o test
 
 RC=0
 
