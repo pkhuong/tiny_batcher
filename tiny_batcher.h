@@ -3,6 +3,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef TINY_BATCHER_ASSERT
+#include <assert.h>
+#endif
+
 // A compact generator for exchange pairs that implement Batcher's
 // odd/even merge sort.  This implementation is far from optimized
 // for speed.  We only use a sorting network because the data-obliviousness
@@ -55,6 +59,11 @@ tiny_batcher_make(size_t len)
 {
     struct tiny_batcher ret;
     ret.len = len;
+
+#ifdef assert
+    assert(len <= SIZE_MAX / 2 && "arrays larger than SIZE_MAX / 2 are unsupported");
+#endif
+
     // Deliberately leave the rest uninitialised, for code size.
     return ret;
 }
