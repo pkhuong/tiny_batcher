@@ -53,15 +53,15 @@ tiny_batcher_generate(struct tiny_batcher *state)
 
         // Done with the inner iteration.
 
-        // p == q == 1, we're done.
+        // v.outer == v.inner == 0 <===> p == q == 1, we're done.
         //
         // N.B., we haven't updated `state` yet, so the next call
         // will do the same thing.
-        if (__builtin_expect((p | q) == 1, 0))
+        if (__builtin_expect((state->c.v.outer | state->c.v.inner) == 0, 0))
             goto done;
 
         state->next_idx = 0;
-        bool is_last_inner = p == q;
+        bool is_last_inner = state->c.v.outer == state->c.v.inner;
         state->c.v.inner = is_last_inner ? state->c.v.ilen : state->c.v.inner - 1;
         state->c.v.outer -= is_last_inner;
     }
