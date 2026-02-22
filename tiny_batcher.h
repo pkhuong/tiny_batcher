@@ -95,7 +95,7 @@ tiny_batcher_next(struct tiny_batcher *state, size_t *left, size_t *right)
 // Sample usage:
 //
 // size_t i, j;
-// TINY_BATCHER_SORT_LOOP(n, i, j)
+// TINY_BATCHER_SORT_LOOP(n, i, j)  // n is evaluated once, everything expanded exactly once.
 // {
 //     if (arr[i] > arr[j])
 //         SWAP(arr[i], arr[j]);
