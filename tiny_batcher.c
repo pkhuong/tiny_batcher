@@ -22,6 +22,7 @@ tiny_batcher_generate(struct tiny_batcher *state)
         state->c.v.ilen = CHAR_BIT * sizeof(long long) - 1 - __builtin_clzll(len - 1);
         state->c.v.outer = state->c.v.inner = state->c.v.ilen;
         state->next_idx = 0;
+        __asm__(" # opaque " : "+m"(*state));
     }
 
     while (true)
