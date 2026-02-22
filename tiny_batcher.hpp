@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <utility>
 
+// Ensures `[base, base + n)` is in ascending order wrt `comparator`.
+//
+// This sort is *not* stable.
 template <typename It, typename Comp>
 [[gnu::always_inline]] inline void
 tiny_batcher_sort(It base, size_t n, Comp comparator)
@@ -22,6 +25,8 @@ tiny_batcher_sort(It base, size_t n, Comp comparator)
     }
 }
 
+// Unstable sort of `[base, base + n)`.
+//
 // This template isn't `always_inline` because there's a good chance of
 // reuse, and the compiler should be able to inline single-use expansions.
 template <typename It>

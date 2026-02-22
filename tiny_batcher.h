@@ -11,6 +11,8 @@
 // odd/even merge sort.  This implementation is far from optimized
 // for speed.  We only use a sorting network because the data-obliviousness
 // makes for a nice easily testable interface.
+//
+// The sort is *not* stable.
 struct tiny_batcher
 {
     // Positive len when uninitialized (except for the length).
@@ -101,6 +103,8 @@ tiny_batcher_next(struct tiny_batcher *state, size_t *left, size_t *right)
 //     if (arr[i] > arr[j])
 //         SWAP(arr[i], arr[j]);
 // }
+//
+// The sort is *not* stable.
 #define TINY_BATCHER_SORT_LOOP(N, LEFT, RIGHT)     TINY_BATCHER_SORT_LOOP_(__COUNTER__, N, LEFT, RIGHT)
 
 #define TINY_BATCHER_SORT_LOOP_(U, N, LEFT, RIGHT) TINY_BATCHER_SORT_LOOP__(U, N, LEFT, RIGHT)
