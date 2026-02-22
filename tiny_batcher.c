@@ -61,9 +61,17 @@ tiny_batcher_generate(struct tiny_batcher *state)
             goto done;
 
         state->next_idx = 0;
-        bool is_last_inner = state->c.v.outer == state->c.v.inner;
-        state->c.v.inner = is_last_inner ? state->c.v.ilen : state->c.v.inner - 1;
-        state->c.v.outer -= is_last_inner;
+        // bool is_last_inner = state->c.v.outer == state->c.v.inner;
+        // and inner is monotonically decreasing.
+
+        state->c.v.inner--;
+
+        bool is_last_inner = state->c.v.outer > state->c.v.inner;
+        if (__builtin_expect(is_last_inner, 0))
+        {
+            state->c.v.inner = state->c.v.ilen;
+            state->c.v.outer--;
+        }
     }
 
 done:;
