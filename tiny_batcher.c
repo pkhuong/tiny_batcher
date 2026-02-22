@@ -30,17 +30,18 @@ tiny_batcher_generate(struct tiny_batcher *state)
         size_t p = (size_t)1 << state->c.v.outer;
         size_t q = (size_t)1 << state->c.v.inner;
         bool is_first_inner = state->c.v.inner == state->c.v.ilen;
-        bool is_subsequent_inner = !is_first_inner;
 
-        size_t d = is_first_inner ? p : 2 * q - p;
-        __asm__(" # block branching " : "+r"(is_subsequent_inner));
-        size_t r = p & -(size_t)is_subsequent_inner;  // = is_first_inner ? 0 : p;
-
+        size_t d = 2 * q - p;
         size_t idx = state->next_idx;
+        size_t increment = (~idx) & p;  // ensure the outer bit is set
 
-        idx += ((idx & p) != r) ? p : 0;
-        __asm__(" # force predication " : "+r"(idx));
+        if (__builtin_expect(is_first_inner, 0))  // special-case the first inner loop (the whole loop)
+        {
+            d = p;
+            increment ^= p;  // ensure the outer bit is not set.
+        }
 
+        idx += increment;
         if (__builtin_expect(idx + d < len, 1))
         {
             struct tiny_batcher_step ret;
