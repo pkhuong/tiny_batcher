@@ -212,7 +212,7 @@ main(int argc, char **argv)
     // argv[1] items.
     if (argc == 2)
     {
-        size_t n = atoll(argv[1]);
+        size_t n = strtoull(argv[1], NULL, 10);
 
         if (n <= 21)
             zero_one_test(n);
