@@ -1,3 +1,4 @@
+#define TINY_BATCHER_ASSERT
 #include "tiny_batcher.hpp"
 
 #include <algorithm>
