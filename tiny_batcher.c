@@ -21,8 +21,8 @@ tiny_batcher_generate(struct tiny_batcher *state)
 
     while (true)
     {
-        size_t p = 1UL << state->c.v.outer;
-        size_t q = 1UL << state->c.v.inner;
+        size_t p = (size_t)1 << state->c.v.outer;
+        size_t q = (size_t)1 << state->c.v.inner;
         bool is_first_inner = state->c.v.inner == state->c.v.ilen;
         bool is_subsequent_inner = !is_first_inner;
 
