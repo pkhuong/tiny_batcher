@@ -27,6 +27,11 @@ tiny_batcher_generate(struct tiny_batcher *state)
 
     while (true)
     {
+#if defined(__i386__) || defined(__x86_64__)
+        // Try to help with register pressure: we have memory operands on x86
+        asm(" # force to mem " : "+m"(state->c.v.ilen));
+#endif
+
         size_t p = (size_t)1 << state->c.v.outer;
         size_t q = (size_t)1 << state->c.v.inner;
         bool is_first_inner = state->c.v.inner == state->c.v.ilen;
@@ -70,6 +75,11 @@ tiny_batcher_generate(struct tiny_batcher *state)
         bool is_last_inner = state->c.v.outer > state->c.v.inner;
         if (__builtin_expect(is_last_inner, 0))
         {
+#if defined(__i386__) || defined(__x86_64__)
+            // Force memory operand on x86
+            asm(" # force to mem " : "+m"(state->c.v.ilen));
+#endif
+
             state->c.v.inner = state->c.v.ilen;
             state->c.v.outer--;
         }
