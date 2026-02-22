@@ -22,6 +22,8 @@ tiny_batcher_sort(It base, size_t n, Comp comparator)
     }
 }
 
+// This template isn't `always_inline` because there's a good chance of
+// reuse, and the compiler should be able to inline single-use expansions.
 template <typename It>
 void
 tiny_batcher_sort(It base, size_t n)
@@ -42,6 +44,7 @@ tiny_batcher_sort(It base, size_t n)
     }
 }
 
+// Trivial container -> (random access) iterator wrappers.
 template <typename T>
 [[gnu::always_inline]] inline void
 tiny_batcher_sort(T &container)
