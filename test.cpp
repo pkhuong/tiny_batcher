@@ -197,6 +197,8 @@ nested_sort_test()
 int
 main(int argc, char **argv)
 {
+    // Stop after 1000 iterations, to minimally exercise the first
+    // couple transitions in the generator state machine.
     bound_check(SIZE_MAX / 2, 1000);
     bound_check(SIZE_MAX / 2 - 1, 1000);
     bound_check(SIZE_MAX / 4 + 2, 1000);
