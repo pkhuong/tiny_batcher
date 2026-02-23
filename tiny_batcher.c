@@ -16,6 +16,9 @@ tiny_batcher_generate(struct tiny_batcher *state)
         char clzll_must_not_truncate_size_t[2 * (sizeof(long long) >= sizeof(size_t)) - 1];
         (void)clzll_must_not_truncate_size_t;
 
+        char bitscan_must_fit_in_uint8_t[2 * (CHAR_BIT * sizeof(long long) < UINT8_MAX) - 1];
+        (void)bitscan_must_fit_in_uint8_t;
+
         state->len = -len;
 
         // clzll(len - 1) is safe because len > 1.
