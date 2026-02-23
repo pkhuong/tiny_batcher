@@ -32,7 +32,7 @@ tiny_batcher_generate(struct tiny_batcher *state)
     {
 #if defined(__i386__) || defined(__x86_64__)
         // Try to help with register pressure: we have memory operands on x86
-        asm(" # force to mem " : "+m"(state->c.v.ilen));
+        __asm__(" # force to mem " : "+m"(state->c.v.ilen));
 #endif
 
         size_t p = (size_t)1 << state->c.v.outer;
@@ -80,7 +80,7 @@ tiny_batcher_generate(struct tiny_batcher *state)
         {
 #if defined(__i386__) || defined(__x86_64__)
             // Force memory operand on x86
-            asm(" # force to mem " : "+m"(state->c.v.ilen));
+            __asm__(" # force to mem " : "+m"(state->c.v.ilen));
 #endif
 
             state->c.v.inner = state->c.v.ilen;
