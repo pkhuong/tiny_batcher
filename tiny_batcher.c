@@ -68,8 +68,8 @@ tiny_batcher_generate(struct tiny_batcher *state)
 
         // clzll(len - 1) is safe because len > 1.
         state->c.v.ilen = CHAR_BIT * sizeof(long long) - 1 - __builtin_clzll(len - 1);
-        // len <= SIZE_MAX / 2 < 2^63, so len - 1 < 2^63, and bit 63 is
-        // clear: clzll(len - 1) >= 1, thus ilen <= 62.
+        // len <= SIZE_MAX / 2 < 2^63, so len - 1 < 2^63, and bit 63 is clear:
+        // clzll(len - 1) >= 1, thus ilen <= 62.
         /*@ admit ilen_init_bound:
           @   state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t); */
         state->c.v.outer = state->c.v.inner = state->c.v.ilen;
@@ -116,19 +116,10 @@ tiny_batcher_generate(struct tiny_batcher *state)
         // incorrect outer bit, and there can only be `p` such indices
         // in a row.
         /*@ admit increment ≤ (1 << 62); */
-        /*@ assert d ≤ (1 << 62); */
         idx += increment;
 
-        // ilen <= 62, so outer <= 62 and inner <= 62.
-        // p = 1 << outer <= 2^62, q = 1 << inner <= 2^62.
-        // Non-first-inner: inner < ilen <= 62, so inner <= 61,
-        //   q <= 2^61, 2*q <= 2^62, d = 2*q - p <= 2^62.
-        // First-inner: d = p <= 2^62.
-        // increment <= p (bitwise AND or XOR with p, a power of 2).
-        // next_idx < len <= 2^63 (from next_idx_bound invariant).
-        // idx = next_idx + increment <= 2^63 - 1 + 2^62 < 2^64.
-        // idx + d <= 3*2^62 - 1 + 2^62 = 2^64 - 1 = SIZE_MAX.
-
+        /*@ assert d ≤ (1 << 62); */
+        /*@ assert no_overflow: idx + d ≤ SIZE_MAX; */
         if (__builtin_expect(idx + d < len, 1))
         {
             struct tiny_batcher_step ret;
