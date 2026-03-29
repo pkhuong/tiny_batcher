@@ -3,3 +3,4 @@
 *.s
 a.out
 test
+/.frama-c/
