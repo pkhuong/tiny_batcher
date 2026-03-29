@@ -2,6 +2,51 @@
 
 #include <limits.h>
 
+#ifdef __FRAMAC__
+#define ASM(COMMENT, ...) /* nothing */
+#else
+#define ASM(COMMENT, ...) __asm__("" : __VA_ARGS__)
+#endif
+
+/*@ logic integer state_measure(struct tiny_batcher s) =
+  @   s.c.v.outer * (64 * SIZE_MAX) + s.c.v.inner * SIZE_MAX + (SIZE_MAX - s.next_idx);
+  @*/
+
+/*@ requires \valid(state);
+  @ requires counter_ranges:
+  @   state->len > SIZE_MAX / 2 ==>
+  @     state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t) ∧
+  @     state->c.v.outer ≤ state->c.v.inner ∧
+  @     state->c.v.inner ≤ state->c.v.ilen;
+  @ requires next_idx_bound:
+  @   state->len > SIZE_MAX / 2 ==>
+  @     state->next_idx + state->len ≤ SIZE_MAX;
+  @ terminates \true;
+  @ assigns *state;
+  @ ensures result_ordered: \result.left ≤ \result.right;
+  @ ensures result_bound:
+  @   \result.right ≢ 0 ==>
+  @     \result.right + \old(state->len) ≤ SIZE_MAX;
+  @ ensures preserve_counter_ranges:
+  @   state->len > SIZE_MAX / 2 ==>
+  @     state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t) ∧
+  @     state->c.v.outer ≤ state->c.v.inner ∧
+  @     state->c.v.inner ≤ state->c.v.ilen;
+  @
+  @ behavior uninitialized:
+  @   assumes state->len ≤ SIZE_MAX / 2;
+  @   ensures \old(state->len) > 1 ==> state->len > SIZE_MAX / 2;
+  @
+  @ behavior initialized:
+  @   assumes state->len > SIZE_MAX / 2;
+  @   ensures state->len > SIZE_MAX / 2;
+  @   ensures progress:
+  @     (\result.left ≡ 0 ∧ \result.right ≡ 0)
+  @     ∨ state_measure(*state) < state_measure(\old(*state));
+  @
+  @ complete behaviors;
+  @ disjoint behaviors;
+  @*/
 __attribute__((__noinline__)) struct tiny_batcher_step
 tiny_batcher_generate(struct tiny_batcher *state)
 {
@@ -23,23 +68,41 @@ tiny_batcher_generate(struct tiny_batcher *state)
 
         // clzll(len - 1) is safe because len > 1.
         state->c.v.ilen = CHAR_BIT * sizeof(long long) - 1 - __builtin_clzll(len - 1);
+        // len <= SIZE_MAX / 2 < 2^63, so len - 1 < 2^63, and bit 63 is
+        // clear: clzll(len - 1) >= 1, thus ilen <= 62.
+        /*@ admit ilen_init_bound:
+          @   state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t); */
         state->c.v.outer = state->c.v.inner = state->c.v.ilen;
         state->next_idx = 0;
-        __asm__(" # opaque " : "+m"(*state));
+        ASM("opaque", "+m"(*state));
     }
 
+    /*@ loop invariant len_negative: state->len > SIZE_MAX / 2;
+      @ loop invariant ilen_bound:
+      @   state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t);
+      @ loop invariant counter_order:
+      @   state->c.v.outer ≤ state->c.v.inner ≤ state->c.v.ilen;
+      @ loop invariant next_idx_bound:
+      @   state->next_idx + state->len ≤ SIZE_MAX;
+      @ loop invariant monotonic: \at(state->len, Pre) > SIZE_MAX / 2 ==>
+      @   state_measure(*state) ≤ state_measure(\at(*state, Pre));
+      @ loop assigns state->c, state->next_idx;
+      @ loop variant state_measure(*state);
+      @*/
     while (true)
     {
 #if defined(__i386__) || defined(__x86_64__)
         // Try to help with register pressure: we have memory operands on x86
-        __asm__(" # force to mem " : "+m"(state->c.v.ilen));
+        ASM("force to mem", "+m"(state->c.v.ilen));
 #endif
 
         size_t p = (size_t)1 << state->c.v.outer;
         size_t q = (size_t)1 << state->c.v.inner;
+        /*@ admit 1 ≤ p ≤ q ≤ (1 << 62); */
         bool is_first_inner = state->c.v.inner == state->c.v.ilen;
 
         size_t d = 2 * q - p;
+        /*@ admit 0 < d < (1 << 62); */
         size_t idx = state->next_idx;
         size_t increment = (~idx) & p;  // ensure the outer bit is set
 
@@ -49,14 +112,32 @@ tiny_batcher_generate(struct tiny_batcher *state)
             increment ^= p;  // ensure the outer bit is not set.
         }
 
+        // adding `increment` simply ensures we skip runs with the
+        // incorrect outer bit, and there can only be `p` such indices
+        // in a row.
+        /*@ admit increment ≤ (1 << 62); */
+        /*@ assert d ≤ (1 << 62); */
         idx += increment;
+
+        // ilen <= 62, so outer <= 62 and inner <= 62.
+        // p = 1 << outer <= 2^62, q = 1 << inner <= 2^62.
+        // Non-first-inner: inner < ilen <= 62, so inner <= 61,
+        //   q <= 2^61, 2*q <= 2^62, d = 2*q - p <= 2^62.
+        // First-inner: d = p <= 2^62.
+        // increment <= p (bitwise AND or XOR with p, a power of 2).
+        // next_idx < len <= 2^63 (from next_idx_bound invariant).
+        // idx = next_idx + increment <= 2^63 - 1 + 2^62 < 2^64.
+        // idx + d <= 3*2^62 - 1 + 2^62 = 2^64 - 1 = SIZE_MAX.
+
         if (__builtin_expect(idx + d < len, 1))
         {
             struct tiny_batcher_step ret;
             ret.left = idx;
             ret.right = idx + d;
 
+            /*@ assert idx + 1 > state->next_idx; */
             state->next_idx = idx + 1;
+            /*@ assert state_measure(*state) < state_measure(\at(*state, LoopCurrent)); */
             return ret;
         }
 
@@ -80,7 +161,7 @@ tiny_batcher_generate(struct tiny_batcher *state)
         {
 #if defined(__i386__) || defined(__x86_64__)
             // Force memory operand on x86
-            __asm__(" # force to mem " : "+m"(state->c.v.ilen));
+            ASM("force to mem", "+m"(state->c.v.ilen));
 #endif
 
             state->c.v.inner = state->c.v.ilen;
