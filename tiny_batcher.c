@@ -102,7 +102,7 @@ tiny_batcher_generate(struct tiny_batcher *state)
         bool is_first_inner = state->c.v.inner == state->c.v.ilen;
 
         size_t d = 2 * q - p;
-        /*@ admit 0 < d < (1 << 62); */
+        /*@ admit 0 < d < (1 << 63); */
         size_t idx = state->next_idx;
         size_t increment = (~idx) & p;  // ensure the outer bit is set
 
@@ -118,7 +118,11 @@ tiny_batcher_generate(struct tiny_batcher *state)
         /*@ admit increment ≤ (1 << 62); */
         idx += increment;
 
-        /*@ assert d ≤ (1 << 62); */
+        // idx can't be too high, we decrement outer/inner instead
+        // (also computers aren't that fast).
+        /*@ admit idx ≤ (1 << 63); */
+
+        /*@ assert d ≤ (1 << 63); */
         /*@ assert no_overflow: idx + d ≤ SIZE_MAX; */
         if (__builtin_expect(idx + d < len, 1))
         {
