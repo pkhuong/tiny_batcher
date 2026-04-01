@@ -2,6 +2,14 @@
 
 #include <limits.h>
 
+#if defined(assert) && SIZE_MAX == 18446744073709551615ULL
+// For each `admit` (some of which assume 64-bit size_t for simplicify),
+// we have matching a matching assertion.
+#define ASSERT assert
+#else
+#define ASSERT(...)
+#endif
+
 #ifdef __FRAMAC__
 #define ASM(COMMENT, ...) /* nothing */
 #else
@@ -51,6 +59,25 @@ __attribute__((__noinline__)) struct tiny_batcher_step
 tiny_batcher_generate(struct tiny_batcher *state)
 {
     size_t len = -state->len;
+    // On first call, set up the state.
+    //
+    // The key bit is computing `ilen = 1 - ceil(log_2(len))`:
+    //  len   ilen
+    //    2     0
+    //    3     1
+    //    4     1
+    //    5     2
+    //    8     2
+    //    9     3
+    //   16     3
+    //   17     4
+    //  512     8
+    //  513     9
+    // 1024     9
+    // 1025    10
+    // 4611686018427387904 61
+    // 4611686018427387905 62
+    // 9223372036854775807 62  (SIZE_MAX / 2)
     if (__builtin_expect(state->len <= SIZE_MAX / 2, 0))
     {
         len = state->len;
@@ -72,6 +99,8 @@ tiny_batcher_generate(struct tiny_batcher *state)
         // clzll(len - 1) >= 1, thus ilen <= 62.
         /*@ admit ilen_init_bound:
           @   state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t); */
+        ASSERT((size_t)state->c.v.ilen + 1 < CHAR_BIT * sizeof(size_t));
+
         state->c.v.outer = state->c.v.inner = state->c.v.ilen;
         state->next_idx = 0;
         ASM("opaque", "+m"(*state));
@@ -99,10 +128,11 @@ tiny_batcher_generate(struct tiny_batcher *state)
         size_t p = (size_t)1 << state->c.v.outer;
         size_t q = (size_t)1 << state->c.v.inner;
         /*@ admit 1 ≤ p ≤ q ≤ (1 << 62); */
+        ASSERT(1 <= p && p <= q && q <= ((size_t)1 << 62));
+
         bool is_first_inner = state->c.v.inner == state->c.v.ilen;
 
         size_t d = 2 * q - p;
-        /*@ admit 0 < d < (1 << 63); */
         size_t idx = state->next_idx;
         size_t increment = (~idx) & p;  // ensure the outer bit is set
 
@@ -111,19 +141,20 @@ tiny_batcher_generate(struct tiny_batcher *state)
             d = p;
             increment ^= p;  // ensure the outer bit is not set.
         }
+        else
+        {
+            /*@ admit 1 ≤ p ≤ q ≤ (1 << 61); */
+            ASSERT(1 <= p && p <= q && q <= ((size_t)1 << 61));
+        }
 
         // adding `increment` simply ensures we skip runs with the
         // incorrect outer bit, and there can only be `p` such indices
         // in a row.
-        /*@ admit increment ≤ (1 << 62); */
+        /*@ admit increment ≤ p ≤ (1 << 62); */
+        ASSERT(increment <= p && p <= ((size_t)1 << 62));
+
+        /*@ assert no_overflow: idx + increment + d ≤ SIZE_MAX; */
         idx += increment;
-
-        // idx can't be too high, we decrement outer/inner instead
-        // (also computers aren't that fast).
-        /*@ admit idx ≤ (1 << 63); */
-
-        /*@ assert d ≤ (1 << 63); */
-        /*@ assert no_overflow: idx + d ≤ SIZE_MAX; */
         if (__builtin_expect(idx + d < len, 1))
         {
             struct tiny_batcher_step ret;
