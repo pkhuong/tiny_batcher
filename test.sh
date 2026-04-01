@@ -5,7 +5,7 @@ set -e
 CC="${CC:-cc}"
 CXX="${CXX:-c++}"
 
-$CC -W -Wall -Os -c tiny_batcher.c
+$CC -W -Wall -Os -DTINY_BATCHER_ASSERT -c tiny_batcher.c
 $CXX -W -Wall -Os test.cpp tiny_batcher.o -o test
 
 RC=0
